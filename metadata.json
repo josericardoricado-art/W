@@ -1,0 +1,7 @@
+{
+  "name": "SocialVoice Dub",
+  "description": "Real-time video and live translation & dubbing assistant for TikTok, Instagram, and Kwai.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
