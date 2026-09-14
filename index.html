@@ -3,338 +3,625 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LinguaFeed — Tradutor de Redes Sociais</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<title>SocialVoice — Tradução em Tempo Real</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --bg: #0a0a0f; --surface: #13131a; --surface2: #1c1c27;
-    --border: rgba(255,255,255,0.07); --accent: #7c6aff;
-    --accent2: #ff6ab0; --accent3: #6affda;
-    --text: #f0eeff; --muted: #7a7a99; --success: #4fffb0;
-  }
-  body {
-    background: var(--bg); color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100vh; display: flex; flex-direction: column;
-    align-items: center; padding: 0 0 80px; overflow-x: hidden;
-  }
-  body::before {
-    content: ''; position: fixed; top: -200px; left: 50%;
-    transform: translateX(-50%); width: 800px; height: 400px;
-    background: radial-gradient(ellipse, rgba(124,106,255,0.15) 0%, transparent 70%);
-    pointer-events: none; z-index: 0;
-  }
-  header {
-    width: 100%; max-width: 640px; padding: 28px 20px 12px;
-    display: flex; align-items: center; justify-content: space-between;
-    position: relative; z-index: 1;
-  }
-  .logo {
-    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.4rem;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
-  }
-  .logo span { font-weight: 400; -webkit-text-fill-color: var(--muted); }
-  .live-badge {
-    display: flex; align-items: center; gap: 6px;
-    background: rgba(74,255,176,0.1); border: 1px solid rgba(74,255,176,0.2);
-    border-radius: 20px; padding: 5px 14px; font-size: 0.72rem;
-    color: var(--success); font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase;
-  }
-  .live-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: pulse 1.5s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
-  .input-card {
-    width: calc(100% - 40px); max-width: 640px;
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 20px; padding: 20px; position: relative; z-index: 1;
-  }
-  .input-top { display: flex; gap: 12px; align-items: flex-start; }
-  .avatar-me {
-    width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    display: flex; align-items: center; justify-content: center;
-    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.85rem; color: white;
-  }
-  .input-wrap { flex: 1; position: relative; }
-  textarea {
-    width: 100%; background: transparent; border: none; outline: none;
-    resize: none; color: var(--text); font-family: 'DM Sans', sans-serif;
-    font-size: 0.97rem; line-height: 1.6; min-height: 80px; padding-right: 48px;
-  }
-  textarea::placeholder { color: var(--muted); }
-  .mic-btn {
-    position: absolute; top: 0; right: 0;
-    width: 38px; height: 38px; border-radius: 50%;
-    background: var(--surface2); border: 1px solid var(--border);
-    cursor: pointer; display: flex; align-items: center; justify-content: center;
-    font-size: 1.1rem; transition: all 0.2s;
-  }
-  .mic-btn:hover { border-color: var(--accent); }
-  .mic-btn.recording {
-    background: rgba(255,106,176,0.15); border-color: var(--accent2);
-    animation: micPulse 1s infinite;
-  }
-  @keyframes micPulse {
-    0%,100%{box-shadow:0 0 0 0 rgba(255,106,176,0.4)}
-    50%{box-shadow:0 0 0 10px rgba(255,106,176,0)}
-  }
-  .voice-viz {
-    display: none; align-items: center; gap: 3px; height: 30px; margin-top: 10px;
-  }
-  .voice-viz.active { display: flex; }
-  .bar {
-    width: 3px; border-radius: 3px;
-    background: linear-gradient(to top, var(--accent), var(--accent2));
-    animation: wave 0.8s ease-in-out infinite;
-  }
-  .bar:nth-child(1){height:8px;animation-delay:0s}
-  .bar:nth-child(2){height:18px;animation-delay:0.1s}
-  .bar:nth-child(3){height:26px;animation-delay:0.2s}
-  .bar:nth-child(4){height:14px;animation-delay:0.3s}
-  .bar:nth-child(5){height:22px;animation-delay:0.15s}
-  .bar:nth-child(6){height:10px;animation-delay:0.25s}
-  .bar:nth-child(7){height:20px;animation-delay:0.05s}
-  @keyframes wave { 0%,100%{transform:scaleY(0.4)}50%{transform:scaleY(1)} }
-  .voice-label { font-size: 0.8rem; color: var(--accent2); margin-left: 8px; }
-  .divider { height: 1px; background: var(--border); margin: 14px 0; }
-  .row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-  .label { font-size: 0.78rem; color: var(--muted); white-space: nowrap; }
-  select {
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif;
-    font-size: 0.82rem; padding: 7px 12px; outline: none; cursor: pointer;
-  }
-  .spacer { flex: 1; }
-  .btn-primary {
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border: none; border-radius: 12px; padding: 10px 22px;
-    color: white; font-family: 'Syne', sans-serif;
-    font-weight: 700; font-size: 0.85rem; cursor: pointer;
-    transition: opacity 0.2s, transform 0.15s;
-  }
-  .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
-  .btn-primary:disabled { opacity: 0.45; cursor: default; transform: none; }
-  .status {
-    display: none; align-items: center; gap: 8px;
-    margin-top: 12px; color: var(--muted); font-size: 0.85rem;
-  }
-  .spinner {
-    width: 15px; height: 15px; border: 2px solid var(--border);
-    border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite;
-  }
-  @keyframes spin { to{transform:rotate(360deg)} }
-  .feed-header {
-    width: calc(100% - 40px); max-width: 640px; padding: 24px 0 8px;
-    display: flex; align-items: center; gap: 12px; position: relative; z-index: 1;
-  }
-  .feed-title {
-    font-family: 'Syne', sans-serif; font-size: 0.75rem; font-weight: 700;
-    text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); white-space: nowrap;
-  }
-  .feed-line { flex: 1; height: 1px; background: var(--border); }
-  #feed {
-    width: calc(100% - 40px); max-width: 640px;
-    display: flex; flex-direction: column; gap: 14px; position: relative; z-index: 1;
-  }
-  .post-card {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 20px; padding: 18px 20px;
-    animation: slideIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
-    transition: border-color 0.2s;
-  }
-  .post-card:hover { border-color: rgba(124,106,255,0.3); }
-  @keyframes slideIn { from{opacity:0;transform:translateY(16px) scale(0.97)} to{opacity:1;transform:none} }
-  .post-top { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; flex-wrap: wrap; }
-  .avatar {
-    width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 700; font-size: 0.82rem; color: white;
-  }
-  .post-meta { flex: 1; min-width: 80px; }
-  .post-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.88rem; }
-  .post-handle { font-size: 0.75rem; color: var(--muted); }
-  .lang-chip {
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 20px; padding: 3px 10px; font-size: 0.72rem; color: var(--muted);
-  }
-  .net-tag { font-size: 0.7rem; padding: 3px 9px; border-radius: 6px; font-weight: 600; }
-  .tag-twitter{background:rgba(29,161,242,0.15);color:#1da1f2}
-  .tag-instagram{background:rgba(225,48,108,0.15);color:#e1306c}
-  .tag-facebook{background:rgba(66,103,178,0.15);color:#4267b2}
-  .tag-linkedin{background:rgba(0,119,181,0.15);color:#0077b5}
-  .tag-tiktok{background:rgba(105,201,208,0.15);color:#69c9d0}
-  .tag-manual{background:rgba(124,106,255,0.15);color:var(--accent)}
-  .original-text {
-    font-size: 0.87rem; color: var(--muted); font-style: italic;
-    margin-bottom: 10px; padding-bottom: 10px;
-    border-bottom: 1px dashed rgba(255,255,255,0.06); line-height: 1.65;
-  }
-  .trans-label {
-    font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px;
-    color: var(--accent); font-weight: 700; margin-bottom: 6px;
-  }
-  .trans-text { font-size: 0.97rem; line-height: 1.65; }
-  .post-actions {
-    display: flex; gap: 12px; margin-top: 14px;
-    padding-top: 12px; border-top: 1px solid var(--border); flex-wrap: wrap;
-  }
-  .action-btn {
-    background: none; border: none; cursor: pointer; color: var(--muted);
-    font-family: 'DM Sans', sans-serif; font-size: 0.8rem;
-    display: flex; align-items: center; gap: 4px; transition: color 0.15s; padding: 0;
-  }
-  .action-btn:hover { color: var(--accent); }
-  .btn-speak {
-    margin-left: auto;
-    background: rgba(106,255,218,0.1); border: 1px solid rgba(106,255,218,0.25);
-    border-radius: 10px; padding: 6px 14px; color: var(--accent3);
-    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.78rem;
-    cursor: pointer; display: flex; align-items: center; gap: 6px; transition: all 0.2s;
-  }
-  .btn-speak:hover { background: rgba(106,255,218,0.18); transform: translateY(-1px); }
-  .btn-speak.speaking { animation: speakPulse 1s infinite; border-color: var(--accent3); }
-  @keyframes speakPulse {
-    0%,100%{box-shadow:0 0 0 0 rgba(106,255,218,0.3)}
-    50%{box-shadow:0 0 0 6px rgba(106,255,218,0)}
-  }
-  .toast {
-    position: fixed; bottom: 24px; left: 50%;
-    transform: translateX(-50%) translateY(80px);
-    background: var(--surface2); border: 1px solid var(--border);
-    border-radius: 14px; padding: 12px 22px; font-size: 0.85rem;
-    z-index: 999; transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
-    white-space: nowrap; pointer-events: none;
-  }
-  .toast.show { transform: translateX(-50%) translateY(0); }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #060612;
+  --surface: rgba(255,255,255,0.04);
+  --surface2: rgba(255,255,255,0.07);
+  --border: rgba(255,255,255,0.08);
+  --text: #f0efff;
+  --muted: #6e6d8a;
+  --g1: #7c5cfc;
+  --g2: #c45cfc;
+  --g3: #fc5c8a;
+  --success: #4fffa0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ── LOADING SCREEN ──────────────────────────── */
+#loading {
+  position: fixed; inset: 0; z-index: 9999;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 28px;
+  transition: opacity 0.6s ease, visibility 0.6s;
+}
+#loading.hide { opacity: 0; visibility: hidden; }
+
+.load-logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 2rem; font-weight: 800;
+  background: linear-gradient(135deg, var(--g1), var(--g2), var(--g3));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: logoPulse 1.5s ease-in-out infinite;
+}
+@keyframes logoPulse { 0%,100%{opacity:0.7} 50%{opacity:1} }
+
+.load-bar-wrap {
+  width: 200px; height: 3px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 99px; overflow: hidden;
+}
+.load-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--g1), var(--g2), var(--g3));
+  border-radius: 99px;
+  animation: loadProgress 2s cubic-bezier(0.4,0,0.2,1) forwards;
+}
+@keyframes loadProgress { from{width:0%} to{width:100%} }
+
+.load-text {
+  font-size: 0.8rem; color: var(--muted); letter-spacing: 0.5px;
+  animation: fadeText 0.5s ease 0.3s both;
+}
+@keyframes fadeText { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+
+/* ── BG GRADIENTS ────────────────────────────── */
+.bg-orb {
+  position: fixed; border-radius: 50%;
+  filter: blur(120px); pointer-events: none; z-index: 0;
+}
+.orb1 { width: 600px; height: 600px; top: -200px; left: -150px; background: rgba(124,92,252,0.12); }
+.orb2 { width: 500px; height: 500px; top: 30%; right: -150px; background: rgba(196,92,252,0.10); }
+.orb3 { width: 400px; height: 400px; bottom: -100px; left: 30%; background: rgba(252,92,138,0.08); }
+
+/* ── AUTH MODAL ──────────────────────────────── */
+#authOverlay {
+  position: fixed; inset: 0; z-index: 999;
+  background: rgba(6,6,18,0.85);
+  backdrop-filter: blur(16px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  animation: fadeIn 0.4s ease both;
+}
+#authOverlay.hide { display: none; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+.auth-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 40px 36px;
+  width: 100%; max-width: 400px;
+  animation: slideUp 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+@keyframes slideUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:none} }
+
+.auth-logo {
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.5rem;
+  background: linear-gradient(135deg, var(--g1), var(--g2), var(--g3));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text; margin-bottom: 6px;
+}
+.auth-sub { font-size: 0.85rem; color: var(--muted); margin-bottom: 28px; }
+
+.auth-tabs {
+  display: flex; gap: 0;
+  background: rgba(255,255,255,0.04);
+  border-radius: 12px; padding: 4px;
+  margin-bottom: 24px;
+}
+.auth-tab {
+  flex: 1; padding: 9px; border: none; border-radius: 9px;
+  background: transparent; color: var(--muted);
+  font-family: 'Inter', sans-serif; font-size: 0.85rem; font-weight: 500;
+  cursor: pointer; transition: all 0.2s;
+}
+.auth-tab.active {
+  background: rgba(124,92,252,0.2);
+  color: #c8b8ff;
+}
+
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 6px; }
+.field input {
+  width: 100%; background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border); border-radius: 12px;
+  padding: 12px 16px; color: var(--text);
+  font-family: 'Inter', sans-serif; font-size: 0.9rem; outline: none;
+  transition: border-color 0.2s;
+}
+.field input:focus { border-color: rgba(124,92,252,0.5); }
+.field input::placeholder { color: var(--muted); }
+
+.btn-auth {
+  width: 100%; padding: 13px;
+  background: linear-gradient(135deg, var(--g1), var(--g2));
+  border: none; border-radius: 12px; color: white;
+  font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem;
+  cursor: pointer; margin-top: 6px; transition: opacity 0.2s, transform 0.15s;
+}
+.btn-auth:hover { opacity: 0.88; transform: translateY(-1px); }
+
+.auth-divider {
+  display: flex; align-items: center; gap: 12px;
+  margin: 18px 0; font-size: 0.75rem; color: var(--muted);
+}
+.auth-divider::before, .auth-divider::after {
+  content: ''; flex: 1; height: 1px; background: var(--border);
+}
+
+.btn-guest {
+  width: 100%; padding: 12px;
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+  border-radius: 12px; color: var(--muted);
+  font-family: 'Inter', sans-serif; font-size: 0.85rem;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-guest:hover { background: rgba(255,255,255,0.08); color: var(--text); }
+
+/* ── APP LAYOUT ──────────────────────────────── */
+#app { display: none; min-height: 100vh; position: relative; z-index: 1; }
+#app.show { display: block; }
+
+/* ── NAVBAR ──────────────────────────────────── */
+nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(6,6,18,0.8); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px; height: 60px;
+  display: flex; align-items: center; justify-content: space-between;
+  max-width: 100%;
+}
+.nav-logo {
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.15rem;
+  background: linear-gradient(135deg, var(--g1), var(--g2), var(--g3));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.nav-right { display: flex; align-items: center; gap: 12px; }
+.nav-user {
+  font-size: 0.82rem; color: var(--muted);
+  display: flex; align-items: center; gap: 8px;
+}
+.nav-avatar {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--g1), var(--g2));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 700; color: white;
+}
+.btn-logout {
+  background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+  border-radius: 8px; padding: 5px 12px; color: var(--muted);
+  font-family: 'Inter', sans-serif; font-size: 0.78rem;
+  cursor: pointer; transition: all 0.2s;
+}
+.btn-logout:hover { color: var(--text); background: rgba(255,255,255,0.08); }
+
+/* ── HERO ────────────────────────────────────── */
+.hero {
+  max-width: 680px; margin: 0 auto;
+  padding: 48px 20px 0;
+  text-align: center;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: rgba(124,92,252,0.12); border: 1px solid rgba(124,92,252,0.25);
+  border-radius: 99px; padding: 5px 14px;
+  font-size: 0.75rem; color: #b8a8ff; font-weight: 500;
+  margin-bottom: 20px;
+}
+.badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); animation: pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.4} }
+
+.hero h1 {
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: clamp(1.8rem, 5vw, 2.8rem);
+  line-height: 1.15; letter-spacing: -1px;
+  margin-bottom: 14px;
+}
+.hero h1 .grad {
+  background: linear-gradient(135deg, var(--g1), var(--g2), var(--g3));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.hero p {
+  font-size: 0.97rem; color: var(--muted); line-height: 1.7;
+  max-width: 480px; margin: 0 auto 36px;
+}
+
+/* ── MAIN CARD ───────────────────────────────── */
+.main-wrap { max-width: 680px; margin: 0 auto; padding: 0 20px 80px; }
+
+.input-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border);
+  border-radius: 24px; padding: 24px;
+  margin-bottom: 16px;
+  position: relative; overflow: hidden;
+}
+.input-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(124,92,252,0.5), rgba(196,92,252,0.5), transparent);
+}
+
+.card-top { display: flex; gap: 14px; align-items: flex-start; }
+.user-orb {
+  width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--g1), var(--g2));
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.85rem; color: white;
+}
+.input-wrap { flex: 1; position: relative; }
+textarea {
+  width: 100%; background: transparent; border: none; outline: none;
+  resize: none; color: var(--text); font-family: 'Inter', sans-serif;
+  font-size: 0.95rem; line-height: 1.65; min-height: 90px; padding-right: 50px;
+}
+textarea::placeholder { color: var(--muted); }
+
+.mic-btn {
+  position: absolute; top: 0; right: 0;
+  width: 38px; height: 38px; border-radius: 50%;
+  background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; transition: all 0.2s;
+}
+.mic-btn:hover { border-color: rgba(124,92,252,0.5); }
+.mic-btn.recording {
+  background: rgba(252,92,138,0.15); border-color: var(--g3);
+  animation: micPulse 1s infinite;
+}
+@keyframes micPulse { 0%,100%{box-shadow:0 0 0 0 rgba(252,92,138,0.3)} 50%{box-shadow:0 0 0 10px rgba(252,92,138,0)} }
+
+.voice-viz { display:none; align-items:center; gap:3px; height:28px; margin-top:10px; }
+.voice-viz.active { display:flex; }
+.bar { width:3px; border-radius:3px; background:linear-gradient(to top,var(--g1),var(--g2)); animation:wave 0.8s ease-in-out infinite; }
+.bar:nth-child(1){height:7px;animation-delay:0s}.bar:nth-child(2){height:16px;animation-delay:0.1s}.bar:nth-child(3){height:24px;animation-delay:0.2s}.bar:nth-child(4){height:12px;animation-delay:0.3s}.bar:nth-child(5){height:20px;animation-delay:0.15s}.bar:nth-child(6){height:9px;animation-delay:0.25s}.bar:nth-child(7){height:18px;animation-delay:0.05s}
+.voice-label { font-size:0.78rem; color:var(--g3); margin-left:8px; }
+@keyframes wave { 0%,100%{transform:scaleY(0.4)} 50%{transform:scaleY(1)} }
+
+.card-bottom {
+  margin-top: 16px; padding-top: 16px;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.select-wrap { display:flex; align-items:center; gap:8px; }
+.select-label { font-size:0.75rem; color:var(--muted); white-space:nowrap; }
+select {
+  background: rgba(255,255,255,0.06); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text); font-family: 'Inter', sans-serif;
+  font-size: 0.82rem; padding: 7px 12px; outline: none; cursor: pointer;
+}
+.spacer { flex:1; }
+.btn-translate {
+  background: linear-gradient(135deg, var(--g1), var(--g2), var(--g3));
+  border: none; border-radius: 12px; padding: 11px 24px;
+  color: white; font-family: 'Syne', sans-serif;
+  font-weight: 700; font-size: 0.88rem; cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s; white-space: nowrap;
+  position: relative; overflow: hidden;
+}
+.btn-translate::after {
+  content: ''; position:absolute; inset:0;
+  background: linear-gradient(135deg, var(--g2), var(--g3), var(--g1));
+  opacity: 0; transition: opacity 0.3s;
+}
+.btn-translate:hover::after { opacity: 1; }
+.btn-translate:hover { transform: translateY(-1px); }
+.btn-translate:disabled { opacity: 0.45; cursor: default; transform: none; }
+.btn-translate span { position: relative; z-index: 1; }
+
+.voice-row { display:flex; align-items:center; gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid var(--border); }
+
+.status { display:none; align-items:center; gap:8px; margin-top:12px; color:var(--muted); font-size:0.85rem; }
+.spinner { width:15px; height:15px; border:2px solid var(--border); border-top-color:var(--g1); border-radius:50%; animation:spin 0.7s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* ── FEED ────────────────────────────────────── */
+.feed-header {
+  display:flex; align-items:center; gap:12px; margin-bottom:16px;
+}
+.feed-title { font-size:0.72rem; font-weight:600; text-transform:uppercase; letter-spacing:1.5px; color:var(--muted); white-space:nowrap; }
+.feed-line { flex:1; height:1px; background:var(--border); }
+
+#feed { display:flex; flex-direction:column; gap:14px; }
+
+.post-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  border-radius: 20px; padding: 18px 20px;
+  animation: cardIn 0.45s cubic-bezier(0.34,1.3,0.64,1) both;
+  transition: border-color 0.2s, background 0.2s;
+  position: relative; overflow: hidden;
+}
+.post-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(124,92,252,0.3), transparent);
+  opacity: 0; transition: opacity 0.3s;
+}
+.post-card:hover { border-color: rgba(124,92,252,0.2); background: rgba(255,255,255,0.05); }
+.post-card:hover::before { opacity: 1; }
+@keyframes cardIn { from{opacity:0;transform:translateY(18px) scale(0.97)} to{opacity:1;transform:none} }
+
+.post-top { display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+.avatar { width:38px; height:38px; border-radius:50%; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:0.82rem; color:white; }
+.post-meta { flex:1; min-width:80px; }
+.post-name { font-weight:600; font-size:0.9rem; }
+.post-handle { font-size:0.75rem; color:var(--muted); }
+.lang-chip { background:rgba(255,255,255,0.06); border:1px solid var(--border); border-radius:99px; padding:3px 10px; font-size:0.72rem; color:var(--muted); }
+.net-tag { font-size:0.68rem; padding:3px 9px; border-radius:6px; font-weight:600; }
+.tag-twitter{background:rgba(29,161,242,0.12);color:#1da1f2}
+.tag-instagram{background:rgba(225,48,108,0.12);color:#e1306c}
+.tag-facebook{background:rgba(66,103,178,0.12);color:#4267b2}
+.tag-linkedin{background:rgba(0,119,181,0.12);color:#0077b5}
+.tag-tiktok{background:rgba(105,201,208,0.12);color:#69c9d0}
+.tag-manual{background:rgba(124,92,252,0.12);color:var(--g1)}
+
+.original-text { font-size:0.87rem; color:var(--muted); font-style:italic; margin-bottom:10px; padding-bottom:10px; border-bottom:1px dashed rgba(255,255,255,0.05); line-height:1.65; }
+.trans-label { font-size:0.68rem; text-transform:uppercase; letter-spacing:1.2px; font-weight:600; margin-bottom:6px; background:linear-gradient(90deg,var(--g1),var(--g2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+.trans-text { font-size:0.95rem; line-height:1.65; }
+
+.post-actions { display:flex; gap:10px; margin-top:14px; padding-top:12px; border-top:1px solid var(--border); flex-wrap:wrap; align-items:center; }
+.action-btn { background:none; border:none; cursor:pointer; color:var(--muted); font-family:'Inter',sans-serif; font-size:0.78rem; transition:color 0.15s; padding:0; }
+.action-btn:hover { color:var(--g1); }
+.btn-speak { margin-left:auto; background:rgba(79,255,160,0.08); border:1px solid rgba(79,255,160,0.2); border-radius:9px; padding:6px 14px; color:var(--success); font-family:'Syne',sans-serif; font-weight:700; font-size:0.75rem; cursor:pointer; transition:all 0.2s; }
+.btn-speak:hover { background:rgba(79,255,160,0.15); transform:translateY(-1px); }
+.btn-speak.speaking { animation:speakGlow 1s infinite; }
+@keyframes speakGlow { 0%,100%{box-shadow:0 0 0 0 rgba(79,255,160,0.3)} 50%{box-shadow:0 0 0 6px rgba(79,255,160,0)} }
+
+/* ── TOAST ───────────────────────────────────── */
+.toast {
+  position:fixed; bottom:24px; left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:rgba(255,255,255,0.08); backdrop-filter:blur(16px);
+  border:1px solid var(--border); border-radius:12px;
+  padding:11px 20px; font-size:0.83rem; z-index:9998;
+  transition:transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  white-space:nowrap; pointer-events:none;
+}
+.toast.show { transform:translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">Lingua<span>Feed</span></div>
-  <div class="live-badge"><div class="live-dot"></div> Ao vivo</div>
-</header>
+<!-- LOADING -->
+<div id="loading">
+  <div class="load-logo">SocialVoice</div>
+  <div class="load-bar-wrap"><div class="load-bar"></div></div>
+  <div class="load-text">Iniciando tradução em tempo real...</div>
+</div>
 
-<div class="input-card">
-  <div class="input-top">
-    <div class="avatar-me">EU</div>
-    <div class="input-wrap">
-      <textarea id="inputText" placeholder="Cole um texto ou clique em 🎤 para falar em qualquer idioma..." rows="3"></textarea>
-      <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="Falar agora">🎤</button>
+<!-- BG ORBS -->
+<div class="bg-orb orb1"></div>
+<div class="bg-orb orb2"></div>
+<div class="bg-orb orb3"></div>
+
+<!-- AUTH MODAL -->
+<div id="authOverlay">
+  <div class="auth-card">
+    <div class="auth-logo">SocialVoice</div>
+    <div class="auth-sub">Tradução em tempo real para redes sociais</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">Entrar</button>
+      <button class="auth-tab" onclick="switchTab('register')">Criar conta</button>
     </div>
-  </div>
-  <div class="voice-viz" id="voiceViz">
-    <div class="bar"></div><div class="bar"></div><div class="bar"></div>
-    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-    <span class="voice-label">Ouvindo... fale agora</span>
-  </div>
-  <div class="divider"></div>
-  <div class="row">
-    <span class="label">Traduzir para</span>
-    <select id="targetLang">
-      <option value="Português">🇧🇷 Português</option>
-      <option value="Inglês">🇺🇸 Inglês</option>
-      <option value="Espanhol">🇪🇸 Espanhol</option>
-      <option value="Francês">🇫🇷 Francês</option>
-      <option value="Alemão">🇩🇪 Alemão</option>
-      <option value="Italiano">🇮🇹 Italiano</option>
-      <option value="Japonês">🇯🇵 Japonês</option>
-      <option value="Chinês">🇨🇳 Chinês</option>
-      <option value="Árabe">🇸🇦 Árabe</option>
-      <option value="Russo">🇷🇺 Russo</option>
-      <option value="Coreano">🇰🇷 Coreano</option>
-      <option value="Hindi">🇮🇳 Hindi</option>
-    </select>
-    <div class="spacer"></div>
-    <button class="btn-primary" id="translateBtn" onclick="handleTranslate()">✦ Traduzir</button>
-  </div>
-  <div class="row" style="margin-top:10px;">
-    <span class="label">🔊 Voz de leitura</span>
-    <select id="voiceLang">
-      <option value="pt-BR">🇧🇷 Português (BR)</option>
-      <option value="en-US">🇺🇸 Inglês (EUA)</option>
-      <option value="es-ES">🇪🇸 Espanhol</option>
-      <option value="fr-FR">🇫🇷 Francês</option>
-      <option value="de-DE">🇩🇪 Alemão</option>
-      <option value="it-IT">🇮🇹 Italiano</option>
-      <option value="ja-JP">🇯🇵 Japonês</option>
-      <option value="zh-CN">🇨🇳 Chinês</option>
-      <option value="ar-SA">🇸🇦 Árabe</option>
-      <option value="ru-RU">🇷🇺 Russo</option>
-      <option value="ko-KR">🇰🇷 Coreano</option>
-      <option value="hi-IN">🇮🇳 Hindi</option>
-    </select>
-  </div>
-  <div class="status" id="status">
-    <div class="spinner"></div>
-    <span>Detectando idioma e traduzindo...</span>
+
+    <div id="loginForm">
+      <div class="field"><label>E-mail</label><input type="email" id="loginEmail" placeholder="seu@email.com"></div>
+      <div class="field"><label>Senha</label><input type="password" id="loginPass" placeholder="••••••••"></div>
+      <button class="btn-auth" onclick="doLogin()">Entrar</button>
+    </div>
+
+    <div id="registerForm" style="display:none">
+      <div class="field"><label>Nome</label><input type="text" id="regName" placeholder="Seu nome"></div>
+      <div class="field"><label>E-mail</label><input type="email" id="regEmail" placeholder="seu@email.com"></div>
+      <div class="field"><label>Senha</label><input type="password" id="regPass" placeholder="Mínimo 6 caracteres"></div>
+      <button class="btn-auth" onclick="doRegister()">Criar conta grátis</button>
+    </div>
+
+    <div class="auth-divider">ou</div>
+    <button class="btn-guest" onclick="enterAsGuest()">Continuar sem conta</button>
   </div>
 </div>
 
-<div class="feed-header">
-  <span class="feed-title">Feed Traduzido</span>
-  <div class="feed-line"></div>
+<!-- APP -->
+<div id="app">
+  <nav>
+    <div class="nav-logo">SocialVoice</div>
+    <div class="nav-right">
+      <div class="nav-user">
+        <div class="nav-avatar" id="navAvatar">?</div>
+        <span id="navName" style="font-size:0.82rem;color:var(--muted)"></span>
+      </div>
+      <button class="btn-logout" onclick="doLogout()">Sair</button>
+    </div>
+  </nav>
+
+  <div class="hero">
+    <div class="hero-badge"><div class="badge-dot"></div> Detecção automática de idioma</div>
+    <h1>Entenda qualquer <span class="grad">idioma</span> nas redes sociais</h1>
+    <p>Cole um texto, fale ou monitore conteúdo de qualquer rede social. O SocialVoice detecta e traduz automaticamente com voz.</p>
+  </div>
+
+  <div class="main-wrap">
+    <div class="input-card">
+      <div class="card-top">
+        <div class="user-orb" id="userOrb">?</div>
+        <div class="input-wrap">
+          <textarea id="inputText" placeholder="Cole aqui qualquer texto de rede social — em qualquer idioma..." rows="3"></textarea>
+          <button class="mic-btn" id="micBtn" onclick="toggleMic()" title="Falar">🎤</button>
+        </div>
+      </div>
+
+      <div class="voice-viz" id="voiceViz">
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        <span class="voice-label">Ouvindo... fale agora</span>
+      </div>
+
+      <div class="card-bottom">
+        <div class="select-wrap">
+          <span class="select-label">Traduzir para</span>
+          <select id="targetLang">
+            <option value="Português">🇧🇷 Português</option>
+            <option value="Inglês">🇺🇸 Inglês</option>
+            <option value="Espanhol">🇪🇸 Espanhol</option>
+            <option value="Francês">🇫🇷 Francês</option>
+            <option value="Alemão">🇩🇪 Alemão</option>
+            <option value="Italiano">🇮🇹 Italiano</option>
+            <option value="Japonês">🇯🇵 Japonês</option>
+            <option value="Chinês">🇨🇳 Chinês</option>
+            <option value="Árabe">🇸🇦 Árabe</option>
+            <option value="Russo">🇷🇺 Russo</option>
+            <option value="Coreano">🇰🇷 Coreano</option>
+            <option value="Hindi">🇮🇳 Hindi</option>
+          </select>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn-translate" id="translateBtn" onclick="handleTranslate()">
+          <span>✦ Traduzir</span>
+        </button>
+      </div>
+
+      <div class="voice-row">
+        <span class="select-label">🔊 Voz</span>
+        <select id="voiceLang">
+          <option value="pt-BR">🇧🇷 Português</option>
+          <option value="en-US">🇺🇸 Inglês</option>
+          <option value="es-ES">🇪🇸 Espanhol</option>
+          <option value="fr-FR">🇫🇷 Francês</option>
+          <option value="de-DE">🇩🇪 Alemão</option>
+          <option value="it-IT">🇮🇹 Italiano</option>
+          <option value="ja-JP">🇯🇵 Japonês</option>
+          <option value="zh-CN">🇨🇳 Chinês</option>
+          <option value="ar-SA">🇸🇦 Árabe</option>
+          <option value="ru-RU">🇷🇺 Russo</option>
+          <option value="ko-KR">🇰🇷 Coreano</option>
+          <option value="hi-IN">🇮🇳 Hindi</option>
+        </select>
+      </div>
+
+      <div class="status" id="status">
+        <div class="spinner"></div>
+        <span>Detectando idioma e traduzindo com IA...</span>
+      </div>
+    </div>
+
+    <div class="feed-header">
+      <span class="feed-title">Feed traduzido</span>
+      <div class="feed-line"></div>
+    </div>
+
+    <div id="feed"></div>
+  </div>
 </div>
-<div id="feed"></div>
+
 <div class="toast" id="toast"></div>
 
 <script>
-// MICROFONE
+// ── AUTH ──────────────────────────────────────
+let currentUser = null;
+
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (tab==='login'&&i===0)||(tab==='register'&&i===1)));
+  document.getElementById('loginForm').style.display = tab==='login' ? 'block' : 'none';
+  document.getElementById('registerForm').style.display = tab==='register' ? 'block' : 'none';
+}
+
+function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass = document.getElementById('loginPass').value;
+  if (!email || !pass) { showToast('⚠️ Preencha e-mail e senha'); return; }
+  const users = JSON.parse(localStorage.getItem('sv_users') || '{}');
+  if (!users[email] || users[email].pass !== pass) { showToast('❌ E-mail ou senha incorretos'); return; }
+  loginUser({ name: users[email].name, email });
+}
+
+function doRegister() {
+  const name = document.getElementById('regName').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const pass = document.getElementById('regPass').value;
+  if (!name || !email || !pass) { showToast('⚠️ Preencha todos os campos'); return; }
+  if (pass.length < 6) { showToast('⚠️ Senha mínimo 6 caracteres'); return; }
+  const users = JSON.parse(localStorage.getItem('sv_users') || '{}');
+  users[email] = { name, pass };
+  localStorage.setItem('sv_users', JSON.stringify(users));
+  loginUser({ name, email });
+  showToast('✦ Conta criada com sucesso!');
+}
+
+function enterAsGuest() { loginUser({ name: 'Visitante', email: '' }); }
+
+function loginUser(user) {
+  currentUser = user;
+  document.getElementById('authOverlay').classList.add('hide');
+  document.getElementById('app').classList.add('show');
+  const initial = user.name[0].toUpperCase();
+  document.getElementById('navAvatar').textContent = initial;
+  document.getElementById('navName').textContent = user.name;
+  document.getElementById('userOrb').textContent = initial;
+}
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('authOverlay').classList.remove('hide');
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('feed').innerHTML = '';
+}
+
+// ── LOADING ───────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(() => {
+    document.getElementById('loading').classList.add('hide');
+  }, 2200);
+  loadDemos();
+  window.speechSynthesis && window.speechSynthesis.getVoices();
+  window.speechSynthesis && (window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices());
+});
+
+// ── MIC ───────────────────────────────────────
 let recognition = null, isRecording = false;
 function toggleMic() {
-  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) {
-    showToast('Use o Google Chrome para voz.'); return;
-  }
+  if (!('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)) { showToast('Use o Chrome para voz'); return; }
   isRecording ? stopMic() : startMic();
 }
 function startMic() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  recognition = new SR();
-  recognition.continuous = false; recognition.interimResults = true; recognition.lang = '';
-  recognition.onstart = () => {
-    isRecording = true;
-    document.getElementById('micBtn').classList.add('recording');
-    document.getElementById('voiceViz').classList.add('active');
-  };
-  recognition.onresult = (e) => {
-    let t = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) t += e.results[i][0].transcript;
-    document.getElementById('inputText').value = t;
-    if (e.results[e.results.length-1].isFinal) { stopMic(); setTimeout(handleTranslate, 500); }
-  };
-  recognition.onerror = (e) => { stopMic(); if (e.error !== 'aborted') showToast('Erro: ' + e.error); };
+  recognition = new SR(); recognition.continuous = false; recognition.interimResults = true; recognition.lang = '';
+  recognition.onstart = () => { isRecording = true; document.getElementById('micBtn').classList.add('recording'); document.getElementById('voiceViz').classList.add('active'); };
+  recognition.onresult = (e) => { let t=''; for(let i=e.resultIndex;i<e.results.length;i++) t+=e.results[i][0].transcript; document.getElementById('inputText').value=t; if(e.results[e.results.length-1].isFinal){stopMic();setTimeout(handleTranslate,500);} };
+  recognition.onerror = (e) => { stopMic(); if(e.error!=='aborted') showToast('Erro: '+e.error); };
   recognition.onend = stopMic;
   recognition.start();
 }
 function stopMic() {
-  isRecording = false;
-  try { recognition && recognition.stop(); } catch(e){}
+  isRecording = false; try{recognition&&recognition.stop();}catch(e){}
   document.getElementById('micBtn').classList.remove('recording');
   document.getElementById('voiceViz').classList.remove('active');
 }
 
-// VOZ
+// ── VOICE ─────────────────────────────────────
 let activeBtn = null;
 function speakText(text, btn) {
-  if (!window.speechSynthesis) { showToast('Voz não suportada.'); return; }
-  if (window.speechSynthesis.speaking) {
-    window.speechSynthesis.cancel();
-    if (activeBtn) { activeBtn.classList.remove('speaking'); activeBtn.textContent = '🔊 Ouvir'; }
-    if (activeBtn === btn) { activeBtn = null; return; }
-  }
+  if (!window.speechSynthesis) { showToast('Voz não suportada'); return; }
+  if (window.speechSynthesis.speaking) { window.speechSynthesis.cancel(); if(activeBtn){activeBtn.classList.remove('speaking');activeBtn.textContent='🔊 Ouvir';} if(activeBtn===btn){activeBtn=null;return;} }
   const lang = document.getElementById('voiceLang').value;
   const u = new SpeechSynthesisUtterance(text);
   u.lang = lang; u.rate = 0.93;
-  const voices = window.speechSynthesis.getVoices();
-  const v = voices.find(x => x.lang.startsWith(lang.split('-')[0]));
-  if (v) u.voice = v;
-  u.onstart = () => { btn.classList.add('speaking'); btn.textContent = '⏹ Parar'; activeBtn = btn; };
-  u.onend = () => { btn.classList.remove('speaking'); btn.textContent = '🔊 Ouvir'; activeBtn = null; };
+  const v = window.speechSynthesis.getVoices().find(x=>x.lang.startsWith(lang.split('-')[0]));
+  if(v) u.voice=v;
+  u.onstart=()=>{btn.classList.add('speaking');btn.textContent='⏹ Parar';activeBtn=btn;};
+  u.onend=()=>{btn.classList.remove('speaking');btn.textContent='🔊 Ouvir';activeBtn=null;};
   window.speechSynthesis.speak(u);
 }
 
-// TRADUÇÃO
+// ── TRANSLATE ─────────────────────────────────
 async function handleTranslate() {
   const text = document.getElementById('inputText').value.trim();
   if (!text) { showToast('Digite ou fale algo primeiro!'); return; }
@@ -344,8 +631,7 @@ async function handleTranslate() {
   btn.disabled = true; status.style.display = 'flex';
   try {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514', max_tokens: 1000,
         messages: [{ role: 'user', content:
@@ -357,32 +643,22 @@ Texto: ${text}` }]
     const data = await res.json();
     const raw = data.content.map(i=>i.text||'').join('');
     const p = JSON.parse(raw.replace(/```json|```/g,'').trim());
-    const colors = ['linear-gradient(135deg,#f093fb,#f5576c)','linear-gradient(135deg,#4facfe,#00f2fe)','linear-gradient(135deg,#43e97b,#38f9d7)','linear-gradient(135deg,#fa709a,#fee140)','linear-gradient(135deg,#a18cd1,#fbc2eb)'];
-    addPost({
-      name:p.authorGuess, handle:p.handleGuess, network:p.network||'manual',
-      color:colors[Math.floor(Math.random()*colors.length)],
-      initials:p.authorGuess.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(),
-      lang:p.detectedLang, original:text, translated:p.translated, targetLang
-    });
+    const colors = ['linear-gradient(135deg,#7c5cfc,#c45cfc)','linear-gradient(135deg,#fc5c8a,#fc9d5c)','linear-gradient(135deg,#5cfca0,#5ccffc)','linear-gradient(135deg,#fca05c,#fc5cfc)','linear-gradient(135deg,#5c8afc,#5cfce0)'];
+    addPost({ name:p.authorGuess, handle:p.handleGuess, network:p.network||'manual', color:colors[Math.floor(Math.random()*colors.length)], initials:p.authorGuess.split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase(), lang:p.detectedLang, original:text, translated:p.translated, targetLang });
     document.getElementById('inputText').value = '';
-    showToast('Tradução concluída!');
-    setTimeout(() => { const b = document.querySelector('.btn-speak'); if(b) speakText(p.translated, b); }, 400);
-  } catch(err) {
-    console.error(err); showToast('Erro ao traduzir. Tente novamente.');
-  } finally { btn.disabled = false; status.style.display = 'none'; }
+    showToast('✦ Tradução concluída!');
+    setTimeout(()=>{ const b=document.querySelector('.btn-speak'); if(b) speakText(p.translated,b); },400);
+  } catch(err) { console.error(err); showToast('Erro ao traduzir. Tente novamente.'); }
+  finally { btn.disabled=false; status.style.display='none'; }
 }
 
-// FEED
-const nets = {
-  twitter:{l:'Twitter / X',c:'tag-twitter'}, instagram:{l:'Instagram',c:'tag-instagram'},
-  facebook:{l:'Facebook',c:'tag-facebook'}, linkedin:{l:'LinkedIn',c:'tag-linkedin'},
-  tiktok:{l:'TikTok',c:'tag-tiktok'}, manual:{l:'Manual',c:'tag-manual'}
-};
+// ── FEED ──────────────────────────────────────
+const nets = { twitter:{l:'Twitter / X',c:'tag-twitter'}, instagram:{l:'Instagram',c:'tag-instagram'}, facebook:{l:'Facebook',c:'tag-facebook'}, linkedin:{l:'LinkedIn',c:'tag-linkedin'}, tiktok:{l:'TikTok',c:'tag-tiktok'}, manual:{l:'Manual',c:'tag-manual'} };
+
 function addPost(d) {
   const net = nets[d.network] || nets.manual;
   const card = document.createElement('div');
   card.className = 'post-card';
-  const translated = d.translated;
   card.innerHTML = `
     <div class="post-top">
       <div class="avatar" style="background:${d.color}">${d.initials}</div>
@@ -391,32 +667,28 @@ function addPost(d) {
       <span class="net-tag ${net.c}">${net.l}</span>
     </div>
     <div class="original-text">${d.original}</div>
-    <div class="trans-label">✦ Traduzido para ${d.targetLang}</div>
-    <div class="trans-text" id="t${Date.now()}">${translated}</div>
+    <div class="trans-label">Traduzido para ${d.targetLang}</div>
+    <div class="trans-text">${d.translated}</div>
     <div class="post-actions">
-      <button class="action-btn" id="cp${Date.now()}">⎘ Copiar</button>
-      <button class="btn-speak" id="sp${Date.now()}">🔊 Ouvir</button>
+      <button class="action-btn">⎘ Copiar</button>
+      <button class="btn-speak">🔊 Ouvir</button>
     </div>`;
-  document.getElementById('feed').insertBefore(card, document.getElementById('feed').firstChild);
-  const cpBtn = card.querySelector('.action-btn');
-  const spBtn = card.querySelector('.btn-speak');
-  cpBtn.addEventListener('click', () => {
-    navigator.clipboard.writeText(translated).then(() => { cpBtn.textContent='✓ Copiado!'; setTimeout(()=>cpBtn.textContent='⎘ Copiar',2000); });
+  const translated = d.translated;
+  card.querySelector('.action-btn').addEventListener('click', function() {
+    navigator.clipboard.writeText(translated).then(()=>{this.textContent='✓ Copiado!';setTimeout(()=>this.textContent='⎘ Copiar',2000);});
   });
-  spBtn.addEventListener('click', () => speakText(translated, spBtn));
+  card.querySelector('.btn-speak').addEventListener('click', function() { speakText(translated, this); });
+  document.getElementById('feed').insertBefore(card, document.getElementById('feed').firstChild);
 }
 
-// DEMO
-window.addEventListener('DOMContentLoaded', () => {
+function loadDemos() {
   [
-    {name:'María García',handle:'@mariagarcia',network:'instagram',color:'linear-gradient(135deg,#f093fb,#f5576c)',initials:'MG',lang:'Espanhol 🇪🇸',original:'El mundo necesita más personas que se despierten felices cada mañana.',translated:'O mundo precisa de mais pessoas que acordem felizes toda manhã.',targetLang:'Português'},
-    {name:'Kenji Tanaka',handle:'@kenjit',network:'twitter',color:'linear-gradient(135deg,#4facfe,#00f2fe)',initials:'KT',lang:'Japonês 🇯🇵',original:'新しいプロジェクトを始めました！とても楽しみです。',translated:'Comecei um novo projeto! Estou muito animado.',targetLang:'Português'},
+    {name:'María García',handle:'@mariagarcia',network:'instagram',color:'linear-gradient(135deg,#fc5c8a,#fc9d5c)',initials:'MG',lang:'Espanhol 🇪🇸',original:'El mundo necesita más personas que se despierten felices cada mañana.',translated:'O mundo precisa de mais pessoas que acordem felizes toda manhã.',targetLang:'Português'},
+    {name:'Kenji Tanaka',handle:'@kenjit',network:'twitter',color:'linear-gradient(135deg,#5c8afc,#5cfce0)',initials:'KT',lang:'Japonês 🇯🇵',original:'新しいプロジェクトを始めました！とても楽しみです。',translated:'Comecei um novo projeto! Estou muito animado.',targetLang:'Português'},
   ].forEach(addPost);
-  window.speechSynthesis && window.speechSynthesis.getVoices();
-  window.speechSynthesis && (window.speechSynthesis.onvoiceschanged = ()=>window.speechSynthesis.getVoices());
-});
+}
 
-// TOAST
+// ── TOAST ─────────────────────────────────────
 let tt;
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(tt);tt=setTimeout(()=>t.classList.remove('show'),3000);}
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter')handleTranslate();});
